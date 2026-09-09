@@ -78,5 +78,6 @@ def create_app() -> FastAPI:
     app.include_router(clauses.router)
     app.include_router(ingestion.router)
     app.include_router(search.router)
+    app.include_router(qa.router)
 
     return app

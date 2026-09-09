@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     embedding_model: str = Field("gemini-embedding-2", validation_alias="EMBEDDING_MODEL", description="The embedding model to use")
     embedding_dimension: int = Field(3072, validation_alias="EMBEDDING_DIMENSION", description="The dimension of the embedding vectors")
     
+    # LLM configuration
+    llm_provider: str = Field("gemini", validation_alias="LLM_PROVIDER", description="Provider for LLM: gemini, openai, etc.")
+    llm_model: str = Field("gemini-2.5-flash", validation_alias="LLM_MODEL", description="The LLM model to use")
+    
     # Provider API Keys
     openai_api_key: str | None = Field(None, validation_alias="OPENAI_API_KEY")
     gemini_api_key: str | None = Field(None, validation_alias="GEMINI_API_KEY")
