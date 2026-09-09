@@ -3,7 +3,7 @@ from pathlib import Path
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import model_validator
+from pydantic import model_validator, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,11 +18,14 @@ class Settings(BaseSettings):
     qdrant_port: int = 6333
     qdrant_collection: str = "researchmind_evidence"
     
-    # Embeddings
-    embedding_model: str = "text-embedding-3-small"
-    embedding_dimension: int = 1536
+    # Embeddings configuration
+    embedding_provider: str = Field("gemini", validation_alias="EMBEDDING_PROVIDER", description="Provider for embeddings: openai, gemini, etc.")
+    embedding_model: str = Field("gemini-embedding-2", validation_alias="EMBEDDING_MODEL", description="The embedding model to use")
+    embedding_dimension: int = Field(3072, validation_alias="EMBEDDING_DIMENSION", description="The dimension of the embedding vectors")
     
-    openai_api_key: str = ""
+    # Provider API Keys
+    openai_api_key: str | None = Field(None, validation_alias="OPENAI_API_KEY")
+    gemini_api_key: str | None = Field(None, validation_alias="GEMINI_API_KEY")
     upload_dir: Path = Path("./data/uploads")
 
     model_config = SettingsConfigDict(env_prefix="RESEARCHMIND_", env_file=".env", extra="ignore")

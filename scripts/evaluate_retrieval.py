@@ -11,7 +11,7 @@ from researchmind.db.vector_store import VectorStore
 from researchmind.retrieval.hybrid_search import HybridSearchService
 from researchmind.retrieval.lexical_retriever import LexicalRetriever
 from researchmind.retrieval.semantic_retriever import SemanticRetriever
-from researchmind.retrieval.embeddings.openai_provider import OpenAIEmbeddingProvider
+from researchmind.retrieval.embeddings.factory import get_embedding_provider
 
 BENCHMARK_FILE = Path(__file__).parent.parent / "data" / "benchmarks" / "retrieval" / "udcpr_ch8_questions.yaml"
 
@@ -52,12 +52,20 @@ async def evaluate():
     
     async with session_factory() as session:
         lexical = LexicalRetriever(session)
-        embedding_provider = OpenAIEmbeddingProvider(
-            model=settings.embedding_model,
-            dimension=settings.embedding_dimension
-        )
+        embedding_provider = get_embedding_provider(settings)
         semantic = SemanticRetriever(vector_store, embedding_provider, session)
         hybrid = HybridSearchService(lexical, semantic)
+        
+        results_json = {
+            "metadata": {
+                "version": "v0.3.0",
+                "embedding_provider": settings.embedding_provider,
+                "embedding_model": settings.embedding_model,
+                "embedding_dimension": settings.embedding_dimension,
+                "notes": "Ingested UDCPR Chapter 8 using StructureAwareChunker"
+            },
+            "strategies": {}
+        }
         
         for strategy in strategies:
             total_r1 = 0
@@ -80,6 +88,21 @@ async def evaluate():
             print(f"Recall@3: {total_r3/n:.2f}")
             print(f"Recall@5: {total_r5/n:.2f}")
             print(f"MRR:      {total_mrr/n:.2f}\n")
+            
+            results_json["strategies"][strategy] = {
+                "Recall@1": total_r1/n,
+                "Recall@3": total_r3/n,
+                "Recall@5": total_r5/n,
+                "MRR": total_mrr/n
+            }
+            
+        import json
+        out_dir = Path(__file__).parent.parent / "data" / "benchmarks" / "retrieval" / "results"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_file = out_dir / "v0.3.0.json"
+        with open(out_file, "w") as f:
+            json.dump(results_json, f, indent=4)
+        print(f"Saved benchmark results to {out_file}")
 
 if __name__ == "__main__":
     asyncio.run(evaluate())

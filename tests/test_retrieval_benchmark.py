@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from researchmind.retrieval.hybrid_search import HybridSearchService
 from researchmind.retrieval.lexical_retriever import LexicalRetriever
 from researchmind.retrieval.semantic_retriever import SemanticRetriever
-from researchmind.retrieval.embeddings.openai_provider import OpenAIEmbeddingProvider
+from researchmind.retrieval.embeddings.factory import get_embedding_provider
 from researchmind.db.vector_store import VectorStore
 from researchmind.config.settings import get_settings
 
@@ -23,11 +23,9 @@ def benchmark_data():
 @pytest.mark.skip(reason="Needs populated database with chunks and embeddings to run properly")
 async def test_retrieval_benchmark(session: AsyncSession, benchmark_data: dict, vector_store: VectorStore):
     settings = get_settings()
+    # Initialize providers
     lexical = LexicalRetriever(session)
-    embedding_provider = OpenAIEmbeddingProvider(
-        model=settings.embedding_model,
-        dimension=settings.embedding_dimension
-    )
+    embedding_provider = get_embedding_provider(settings)
     semantic = SemanticRetriever(vector_store, embedding_provider, session)
     hybrid = HybridSearchService(lexical, semantic)
     

@@ -19,15 +19,15 @@ class IngestionJob(TimestampMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     document_version_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("document_versions.id"), index=True)
     status: Mapped[IngestionStage] = mapped_column(
-        SQLAlchemyEnum(IngestionStage), default=IngestionStage.QUEUED
+        SQLAlchemyEnum(IngestionStage, native_enum=False, length=50), default=IngestionStage.QUEUED
     )
     current_stage: Mapped[IngestionStage] = mapped_column(
-        SQLAlchemyEnum(IngestionStage), default=IngestionStage.QUEUED
+        SQLAlchemyEnum(IngestionStage, native_enum=False, length=50), default=IngestionStage.QUEUED
     )
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
-    error_stage: Mapped[IngestionStage | None] = mapped_column(SQLAlchemyEnum(IngestionStage), nullable=True)
+    error_stage: Mapped[IngestionStage | None] = mapped_column(SQLAlchemyEnum(IngestionStage, native_enum=False, length=50), nullable=True)
     retry_count: Mapped[int] = mapped_column(Integer, default=0)
     parser_version: Mapped[str] = mapped_column(String(50), default="0.1.0")
     pages_processed: Mapped[int | None] = mapped_column(Integer, nullable=True)

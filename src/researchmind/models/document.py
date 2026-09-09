@@ -18,7 +18,7 @@ class RegulatoryDocument(TimestampMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     title: Mapped[str] = mapped_column(String(500))
     short_title: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    document_type: Mapped[DocumentType] = mapped_column(SQLAlchemyEnum(DocumentType))
+    document_type: Mapped[DocumentType] = mapped_column(SQLAlchemyEnum(DocumentType, native_enum=False, length=50))
     authority_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("authorities.id"))
     jurisdiction_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("jurisdictions.id"))
     subject_area: Mapped[str] = mapped_column(String(200))
@@ -44,7 +44,7 @@ class DocumentVersion(TimestampMixin, Base):
     year: Mapped[int] = mapped_column(Integer)
     effective_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     superseded_date: Mapped[date | None] = mapped_column(Date, nullable=True)
-    status: Mapped[VersionStatus] = mapped_column(SQLAlchemyEnum(VersionStatus))
+    status: Mapped[VersionStatus] = mapped_column(SQLAlchemyEnum(VersionStatus, native_enum=False, length=50))
     file_path: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     file_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
     source_url: Mapped[str | None] = mapped_column(String(1000), nullable=True)
@@ -74,7 +74,7 @@ class Amendment(TimestampMixin, Base):
     effective_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     file_path: Mapped[str | None] = mapped_column(String(1000), nullable=True)
-    status: Mapped[AmendmentStatus] = mapped_column(SQLAlchemyEnum(AmendmentStatus))
+    status: Mapped[AmendmentStatus] = mapped_column(SQLAlchemyEnum(AmendmentStatus, native_enum=False, length=50))
 
     # Relationship
     document_version: Mapped["DocumentVersion"] = relationship(back_populates="amendments")

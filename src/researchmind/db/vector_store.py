@@ -58,8 +58,10 @@ class VectorStore:
             payload = {
                 "clause_id": str(chunk.clause_id) if chunk.clause_id else None,
                 "document_version_id": str(chunk.document_version_id) if chunk.document_version_id else None,
+                "jurisdiction_id": str(chunk.jurisdiction_id) if chunk.jurisdiction_id else None,
                 "clause_path": chunk.clause_path,
                 "chunk_type": chunk.chunk_type,
+                "topic": chunk.topic,
                 "content": chunk.content,
                 "hierarchy_context": chunk.hierarchy_context,
                 "start_page": chunk.start_page,
@@ -80,12 +82,12 @@ class VectorStore:
     ) -> list[ScoredPoint]:
         """Search for similar vectors."""
         try:
-            return self._client.search(
+            return self._client.query_points(
                 collection_name=self._collection_name,
-                query_vector=query_vector,
+                query=query_vector,
                 limit=limit,
                 query_filter=query_filter,
-            )
+            ).points
         except Exception as e:
             logger.error(f"Error searching points: {e}")
             raise

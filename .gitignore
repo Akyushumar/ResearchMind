@@ -40,4 +40,6 @@ htmlcov/
 # Project specific
 data/
 .env
+.env.*
+!.env.example
 *.db

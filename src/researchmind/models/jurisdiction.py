@@ -17,7 +17,7 @@ class Jurisdiction(TimestampMixin, Base):
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     name: Mapped[str] = mapped_column(String(255))
     code: Mapped[str] = mapped_column(String(50), unique=True, index=True)
-    level: Mapped[JurisdictionLevel] = mapped_column(SQLAlchemyEnum(JurisdictionLevel))
+    level: Mapped[JurisdictionLevel] = mapped_column(SQLAlchemyEnum(JurisdictionLevel, native_enum=False, length=50))
     parent_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("jurisdictions.id"), nullable=True)
     country_code: Mapped[str] = mapped_column(String(10))
     state_code: Mapped[str | None] = mapped_column(String(10), nullable=True)

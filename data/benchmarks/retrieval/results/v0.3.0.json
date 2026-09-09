@@ -1,0 +1,29 @@
+{
+    "metadata": {
+        "version": "v0.3.0",
+        "embedding_provider": "gemini",
+        "embedding_model": "gemini-embedding-2",
+        "embedding_dimension": 3072,
+        "notes": "Ingested UDCPR Chapter 8 using StructureAwareChunker"
+    },
+    "strategies": {
+        "lexical": {
+            "Recall@1": 0.125,
+            "Recall@3": 0.125,
+            "Recall@5": 0.125,
+            "MRR": 0.125
+        },
+        "semantic": {
+            "Recall@1": 0.125,
+            "Recall@3": 0.25,
+            "Recall@5": 0.375,
+            "MRR": 0.19166666666666665
+        },
+        "hybrid": {
+            "Recall@1": 0.125,
+            "Recall@3": 0.375,
+            "Recall@5": 0.375,
+            "MRR": 0.20833333333333331
+        }
+    }
+}

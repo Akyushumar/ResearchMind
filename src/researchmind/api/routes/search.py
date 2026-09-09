@@ -10,7 +10,7 @@ from researchmind.retrieval.lexical_retriever import LexicalRetriever
 from researchmind.retrieval.semantic_retriever import SemanticRetriever
 from researchmind.retrieval.hybrid_search import HybridSearchService
 from researchmind.retrieval.base import SearchMetadataFilter, SearchResult
-from researchmind.retrieval.embeddings.openai_provider import OpenAIEmbeddingProvider
+from researchmind.retrieval.embeddings.factory import get_embedding_provider
 
 router = APIRouter(prefix="/search", tags=["Search"])
 
@@ -37,10 +37,7 @@ async def search_evidence(
     
     # Initialize components
     lexical = LexicalRetriever(session)
-    embedding_provider = OpenAIEmbeddingProvider(
-        model=settings.embedding_model,
-        dimension=settings.embedding_dimension
-    )
+    embedding_provider = get_embedding_provider(settings)
     semantic = SemanticRetriever(vector_store, embedding_provider, session)
     hybrid = HybridSearchService(lexical, semantic)
     

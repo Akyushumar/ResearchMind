@@ -154,7 +154,7 @@ class IngestionPipeline:
             clause = Clause(
                 document_version_id=document_version_id,
                 parent_clause_id=parent_id,
-                clause_number=ec.clause_number,
+                clause_number=ec.clause_number or "",
                 title=ec.title,
                 content=ec.content,
                 depth=ec.depth,
