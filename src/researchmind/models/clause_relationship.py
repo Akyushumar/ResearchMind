@@ -16,7 +16,7 @@ class ClauseRelationship(TimestampMixin, Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     source_clause_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("clauses.id"), index=True)
-    target_clause_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("clauses.id"), index=True)
+    target_clause_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("clauses.id"), index=True, nullable=True)
     relationship_type: Mapped[RelationshipType] = mapped_column(SQLAlchemyEnum(RelationshipType))
     context: Mapped[str | None] = mapped_column(Text, nullable=True)
     extracted_text: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -25,7 +25,7 @@ class ClauseRelationship(TimestampMixin, Base):
     source_clause: Mapped["Clause"] = relationship(
         foreign_keys=[source_clause_id], back_populates="outgoing_relationships"
     )
-    target_clause: Mapped["Clause"] = relationship(
+    target_clause: Mapped["Clause | None"] = relationship(
         foreign_keys=[target_clause_id], back_populates="incoming_relationships"
     )
 

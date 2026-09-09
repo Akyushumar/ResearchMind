@@ -1,3 +1,4 @@
+import json
 import asyncio
 import time
 import uuid
@@ -20,8 +21,34 @@ from researchmind.ingestion.base import (
     RelationshipExtractor,
     StructureDetector,
 )
+from researchmind.ingestion.parsers.pdf_parser import PDFParser
+from researchmind.ingestion.detectors.clause_number_parser import ClauseNumberParser
+from researchmind.ingestion.detectors.heading_classifier import FontBasedHeadingClassifier
+from researchmind.ingestion.detectors.dcr_structure_detector import DCRStructureDetector
+from researchmind.ingestion.extractors.clause_extractor import DCRClauseExtractor
+from researchmind.ingestion.extractors.relationship_extractor import RegexRelationshipExtractor
+from researchmind.ingestion.chunkers.passthrough_chunker import PassthroughChunker
 
 logger = get_logger(__name__)
+
+
+def create_dcr_pipeline(session_factory: async_sessionmaker[AsyncSession]) -> "IngestionPipeline":
+    number_parser = ClauseNumberParser()
+    classifier = FontBasedHeadingClassifier(number_parser=number_parser)
+    structure_detector = DCRStructureDetector(classifier=classifier)
+    clause_extractor = DCRClauseExtractor()
+    relationship_extractor = RegexRelationshipExtractor()
+    chunker = PassthroughChunker()
+    parser = PDFParser()
+    
+    return IngestionPipeline(
+        parser=parser,
+        structure_detector=structure_detector,
+        clause_extractor=clause_extractor,
+        relationship_extractor=relationship_extractor,
+        chunker=chunker,
+        session_factory=session_factory
+    )
 
 
 class IngestionPipeline:
@@ -120,12 +147,13 @@ class IngestionPipeline:
     async def _run_chunking(self, clauses: list[ExtractedClause]) -> list[EvidenceChunkData]:
         return await self.chunker.chunk(clauses)
 
-    async def _persist_clauses(self, session: AsyncSession, document_version_id: uuid.UUID, clauses: list[ExtractedClause]) -> dict[str, uuid.UUID]:
+    async def _persist_clauses(self, session: AsyncSession, document_version_id: uuid.UUID, clauses: list[ExtractedClause], parent_id: uuid.UUID | None = None) -> dict[str, uuid.UUID]:
         """Persist extracted clauses to DB. Returns mapping of clause_path -> clause_id."""
         path_map = {}
         for ec in clauses:
             clause = Clause(
                 document_version_id=document_version_id,
+                parent_clause_id=parent_id,
                 clause_number=ec.clause_number,
                 title=ec.title,
                 content=ec.content,
@@ -141,32 +169,34 @@ class IngestionPipeline:
             path_map[ec.path] = clause.id
             
             if ec.children:
-                child_map = await self._persist_clauses(session, document_version_id, ec.children)
+                child_map = await self._persist_clauses(session, document_version_id, ec.children, parent_id=clause.id)
                 path_map.update(child_map)
                 
         await session.commit()
         return path_map
 
     async def _persist_relationships(self, session: AsyncSession, relationships: list[ExtractedRelationship], clause_path_map: dict[str, uuid.UUID]) -> None:
+        print(f"Persisting {len(relationships)} rels. Path map size: {len(clause_path_map)}")
         for rel in relationships:
+            print(f"Rel source_path={rel.source_clause_path} target={rel.target_reference}")
             source_id = clause_path_map.get(rel.source_clause_path)
             if not source_id:
+                print(f"Missing source_id for {rel.source_clause_path}")
                 continue
                 
-            # target_id resolution is complex in practice, skipping full resolution here
-            # assuming target_reference could be resolved to an ID
+            # Try to resolve target to an existing clause via its path
+            target_id = clause_path_map.get(rel.target_reference)
             
-            # db_rel = ClauseRelationship(
-            #     source_clause_id=source_id,
-            #     # target_clause_id=...
-            #     relationship_type=rel.relationship_type,
-            #     context=rel.context,
-            #     extracted_text=rel.target_reference,
-            #     confidence=rel.confidence
-            # )
-            # session.add(db_rel)
-        # await session.commit()
-        pass
+            db_rel = ClauseRelationship(
+                source_clause_id=source_id,
+                target_clause_id=target_id,
+                relationship_type=rel.relationship_type,
+                context=rel.context,
+                extracted_text=rel.target_reference,
+                confidence=rel.confidence
+            )
+            session.add(db_rel)
+        await session.commit()
 
     async def _persist_chunks(self, session: AsyncSession, chunks: list[EvidenceChunkData], clause_path_map: dict[str, uuid.UUID], document_version_id: uuid.UUID) -> None:
         for c in chunks:
@@ -182,7 +212,7 @@ class IngestionPipeline:
                 source_text=c.source_text,
                 start_page=c.start_page,
                 end_page=c.end_page,
-                bbox_json=c.bbox,
+                bbox_json=json.dumps(c.bbox) if c.bbox else None,
             )
             session.add(chunk)
         await session.commit()

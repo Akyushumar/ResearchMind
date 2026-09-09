@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from researchmind.config.settings import get_settings
 from researchmind.models.base import Base
 # Import all models so they are registered with Base
-from researchmind.models.tables import (
+from researchmind.models import (
     Amendment,
     ApplicabilityRule,
     Authority,

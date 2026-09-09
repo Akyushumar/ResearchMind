@@ -15,7 +15,12 @@ from researchmind.api.app import create_app
 from researchmind.models import Base
 
 # Use aiosqlite for testing (in-memory SQLite)
-TEST_DATABASE_URL = "sqlite+aiosqlite:///"
+TEST_DATABASE_URL = "sqlite+aiosqlite:///test.db"
+# Use aiosqlite for testing
+import os
+import tempfile
+TEST_DB_PATH = os.path.join(tempfile.gettempdir(), "test_researchmind.db")
+TEST_DATABASE_URL = f"sqlite+aiosqlite:///{TEST_DB_PATH}"
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -64,3 +69,16 @@ async def client(engine, session_factory) -> AsyncGenerator[AsyncClient, None]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         yield client
+
+import tempfile
+from pathlib import Path
+
+@pytest.fixture
+def synthetic_pdf() -> AsyncGenerator[Path, None]:
+    from tests.fixtures.synthetic_regulatory import create_synthetic_dcr_pdf
+    with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as f:
+        path = Path(f.name)
+    create_synthetic_dcr_pdf(path)
+    yield path
+    if path.exists():
+        path.unlink()

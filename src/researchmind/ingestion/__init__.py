@@ -5,7 +5,7 @@ from researchmind.ingestion.base import (
     RelationshipExtractor,
     StructureDetector,
 )
-from researchmind.ingestion.pipeline import IngestionPipeline
+from researchmind.ingestion.pipeline import IngestionPipeline, create_dcr_pipeline
 
 __all__ = [
     "ClauseChunker",
@@ -14,4 +14,5 @@ __all__ = [
     "RelationshipExtractor",
     "StructureDetector",
     "IngestionPipeline",
+    "create_dcr_pipeline",
 ]

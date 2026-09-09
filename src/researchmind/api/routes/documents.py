@@ -3,7 +3,7 @@ import uuid
 from typing import Sequence
 
 import pymupdf  # fitz
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Request, BackgroundTasks
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +18,7 @@ from researchmind.models.schemas import (
     RegulatoryDocumentRead,
 )
 from researchmind.models import DocumentVersion, IngestionJob, RegulatoryDocument
+from researchmind.ingestion import create_dcr_pipeline
 
 router = APIRouter(prefix="/api/v1/documents", tags=["documents"])
 
@@ -97,8 +98,10 @@ async def create_document_version(
 
 @router.post("/{document_id}/versions/{version_id}/upload", response_model=IngestionJobRead)
 async def upload_document_version_file(
+    request: Request,
     document_id: uuid.UUID,
     version_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings_dep),
@@ -141,7 +144,13 @@ async def upload_document_version_file(
     )
     db.add(job)
     await db.flush()
+    await db.commit()  # Ensure job is committed before background task accesses it
     await db.refresh(job)
+    
+    # Add background task
+    pipeline = create_dcr_pipeline(request.app.state.session_factory)
+    background_tasks.add_task(pipeline.run, job.id)
+    
     return job
 
 

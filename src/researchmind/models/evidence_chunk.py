@@ -1,11 +1,34 @@
 """Evidence chunk model."""
 import uuid
 
-from sqlalchemy import ForeignKey, Integer, String, Text
+from sqlalchemy import ForeignKey, Integer, String, Text, Computed, Index
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.expression import FunctionElement
+from sqlalchemy.types import UserDefinedType
 
 from .base import Base, TimestampMixin
 
+class TSVectorType(UserDefinedType):
+    cache_ok = True
+    def get_col_spec(self, **kw):
+        return "TSVECTOR"
+
+class search_vector_expr(FunctionElement):
+    type = TSVectorType()
+    name = 'search_vector_expr'
+
+@compiles(search_vector_expr, 'postgresql')
+def compile_search_vector_expr_postgresql(element, compiler, **kw):
+    return (
+        "setweight(to_tsvector('english', coalesce(clause_path, '')), 'A') || "
+        "setweight(to_tsvector('english', coalesce(hierarchy_context, '')), 'B') || "
+        "setweight(to_tsvector('english', coalesce(content, '')), 'C')"
+    )
+
+@compiles(search_vector_expr, 'sqlite')
+def compile_search_vector_expr_sqlite(element, compiler, **kw):
+    return "''"
 
 class EvidenceChunk(TimestampMixin, Base):
     """A vectorized chunk of evidence."""
@@ -36,12 +59,26 @@ class EvidenceChunk(TimestampMixin, Base):
     # Vector store reference
     embedding_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
-    # Parser metadata
-    parser_metadata: Mapped[str | None] = mapped_column(Text, nullable=True)
+    # Versioning & Embedding Metadata
+    chunk_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    embedding_model: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    embedding_dimension: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    embedding_status: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    
+    # Hierarchy Context
+    clause_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    hierarchy_context: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # FTS
+    search_vector = mapped_column(TSVectorType, Computed(search_vector_expr()))
 
     clause: Mapped["Clause"] = relationship(back_populates="evidence_chunks")
     document_version: Mapped["DocumentVersion"] = relationship()
     jurisdiction: Mapped["Jurisdiction | None"] = relationship()
+
+    __table_args__ = (
+        Index("ix_evidence_chunks_search_vector", "search_vector", postgresql_using="gin"),
+    )
 
     def __repr__(self) -> str:
         """Return string representation."""
