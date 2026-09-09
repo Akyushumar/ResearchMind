@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     qdrant_host: str = "localhost"
     qdrant_port: int = 6333
     qdrant_collection: str = "researchmind_evidence"
+    
+    # Embeddings
+    embedding_model: str = "text-embedding-3-small"
+    embedding_dimension: int = 1536
+    
     openai_api_key: str = ""
     upload_dir: Path = Path("./data/uploads")
 

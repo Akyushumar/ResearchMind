@@ -47,41 +47,28 @@ class ClauseNumberParser:
                 numbering_type="decimal"
             )
             
-        # Try letter
-        match = self.LETTER.match(text)
-        # Try roman (check before letter to catch 'i', 'v', 'x' as roman if needed)
-        # Actually, if we just swap them, (i) will be roman.
+        # Try roman (check before letter to catch 'i', 'v', 'x' as roman)
         match = self.ROMAN.match(text)
         if match:
             raw = match.group(0).strip()
-            letter = match.group(1)
             roman = match.group(1).lower()
             return ParsedClauseNumber(
                 raw=raw,
-                parts=[letter],
                 parts=[roman],
                 numbering_depth=0,
-                normalized=letter,
-                numbering_type="letter"
                 normalized=roman,
                 numbering_type="roman"
             )
             
-        # Try roman
-        match = self.ROMAN.match(text)
         # Try letter
         match = self.LETTER.match(text)
         if match:
             raw = match.group(0).strip()
-            roman = match.group(1).lower()
             letter = match.group(1).lower()
             return ParsedClauseNumber(
                 raw=raw,
-                parts=[roman],
                 parts=[letter],
                 numbering_depth=0,
-                normalized=roman,
-                numbering_type="roman"
                 normalized=letter,
                 numbering_type="letter"
             )

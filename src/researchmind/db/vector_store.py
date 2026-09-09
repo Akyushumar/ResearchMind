@@ -47,6 +47,34 @@ class VectorStore:
             logger.error(f"Error upserting points: {e}")
             raise
 
+    def upsert_chunks(self, chunks: list[Any], embeddings: list[list[float]]) -> None:
+        """Upsert EvidenceChunk objects and their embeddings."""
+        if len(chunks) != len(embeddings):
+            raise ValueError("Number of chunks and embeddings must match")
+            
+        points = []
+        for chunk, embedding in zip(chunks, embeddings):
+            # chunk.id is a UUID, we can use str(chunk.id) for Qdrant
+            payload = {
+                "clause_id": str(chunk.clause_id) if chunk.clause_id else None,
+                "document_version_id": str(chunk.document_version_id) if chunk.document_version_id else None,
+                "clause_path": chunk.clause_path,
+                "chunk_type": chunk.chunk_type,
+                "content": chunk.content,
+                "hierarchy_context": chunk.hierarchy_context,
+                "start_page": chunk.start_page,
+                "end_page": chunk.end_page
+            }
+            points.append(
+                PointStruct(
+                    id=str(chunk.id),
+                    vector=embedding,
+                    payload={k: v for k, v in payload.items() if v is not None}
+                )
+            )
+            
+        self.upsert(points)
+
     def search(
         self, query_vector: list[float], limit: int = 10, query_filter: Filter | None = None
     ) -> list[ScoredPoint]:

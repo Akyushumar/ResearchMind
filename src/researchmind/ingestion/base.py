@@ -97,6 +97,8 @@ class EvidenceChunkData:
     start_page: int | None = None
     end_page: int | None = None
     bbox: dict | None = None  # {"x0": float, "y0": float, "x1": float, "y1": float}
+    hierarchy_context: str | None = None
+    chunk_type: str | None = None
 
 
 class DocumentParser(ABC):

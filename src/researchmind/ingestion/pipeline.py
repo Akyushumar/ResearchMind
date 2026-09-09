@@ -27,7 +27,7 @@ from researchmind.ingestion.detectors.heading_classifier import FontBasedHeading
 from researchmind.ingestion.detectors.dcr_structure_detector import DCRStructureDetector
 from researchmind.ingestion.extractors.clause_extractor import DCRClauseExtractor
 from researchmind.ingestion.extractors.relationship_extractor import RegexRelationshipExtractor
-from researchmind.ingestion.chunkers.passthrough_chunker import PassthroughChunker
+from researchmind.ingestion.chunkers.structure_aware_chunker import StructureAwareChunker
 
 logger = get_logger(__name__)
 
@@ -38,7 +38,7 @@ def create_dcr_pipeline(session_factory: async_sessionmaker[AsyncSession]) -> "I
     structure_detector = DCRStructureDetector(classifier=classifier)
     clause_extractor = DCRClauseExtractor()
     relationship_extractor = RegexRelationshipExtractor()
-    chunker = PassthroughChunker()
+    chunker = StructureAwareChunker()
     parser = PDFParser()
     
     return IngestionPipeline(
@@ -213,6 +213,9 @@ class IngestionPipeline:
                 start_page=c.start_page,
                 end_page=c.end_page,
                 bbox_json=json.dumps(c.bbox) if c.bbox else None,
+                hierarchy_context=c.hierarchy_context,
+                chunk_type=c.chunk_type,
+                clause_path=c.clause_path,
             )
             session.add(chunk)
         await session.commit()

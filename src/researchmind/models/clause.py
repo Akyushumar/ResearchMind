@@ -17,6 +17,7 @@ class Clause(TimestampMixin, Base):
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     document_version_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("document_versions.id"))
+    clause_number: Mapped[str] = mapped_column(String(50), index=True)
     clause_number: Mapped[str | None] = mapped_column(String(50), index=True, nullable=True)
     title: Mapped[str | None] = mapped_column(String(500), nullable=True)
     content: Mapped[str] = mapped_column(Text)

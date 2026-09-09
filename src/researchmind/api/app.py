@@ -3,7 +3,7 @@ from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from researchmind.api.routes import clauses, documents, health, ingestion, jurisdictions
+from researchmind.api.routes import clauses, documents, health, ingestion, jurisdictions, search
 from researchmind.config.logging import get_logger, setup_logging
 from researchmind.config.settings import get_settings
 from researchmind.db.engine import create_engine
@@ -33,6 +33,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         port=settings.qdrant_port,
         collection_name=settings.qdrant_collection,
     )
+    # Ensure collection exists with proper dimensions
+    vector_store.ensure_collection(vector_size=settings.embedding_dimension)
+    
     app.state.vector_store = vector_store
     
     # 5. Ensure upload directory exists
@@ -74,5 +77,6 @@ def create_app() -> FastAPI:
     app.include_router(jurisdictions.router)
     app.include_router(clauses.router)
     app.include_router(ingestion.router)
+    app.include_router(search.router)
 
     return app
