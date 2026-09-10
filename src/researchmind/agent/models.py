@@ -53,3 +53,17 @@ class LLMResponse(BaseModel):
     message: LLMMessage
     text: Optional[str] = None
     function_calls: List[Dict[str, Any]] = Field(default_factory=list)
+
+class QARequest(BaseModel):
+    question: str
+    jurisdiction_id: Optional[uuid.UUID] = None
+    document_version_id: Optional[uuid.UUID] = None
+
+class QAResponse(BaseModel):
+    answer: str
+    citations: List[Citation]
+    grounding_status: str
+    confidence: str
+    limitations: List[str]
+    evidence_used: List[CanonicalEvidence]
+    tool_traces: Optional[List[ToolTrace]] = None

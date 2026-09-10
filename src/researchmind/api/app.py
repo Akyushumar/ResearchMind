@@ -3,7 +3,7 @@ from typing import AsyncIterator
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from researchmind.api.routes import clauses, documents, health, ingestion, jurisdictions, search
+from researchmind.api.routes import clauses, documents, health, ingestion, jurisdictions, search, qa
 from researchmind.config.logging import get_logger, setup_logging
 from researchmind.config.settings import get_settings
 from researchmind.db.engine import create_engine

@@ -79,7 +79,7 @@ class GeminiLLMProvider(BaseLLMProvider):
                     name=msg.function_response["name"],
                     response=msg.function_response["response"]
                 )
-                contents.append(types.Content(role="tool", parts=[fr]))
+                contents.append(types.Content(role="user", parts=[fr]))
 
         config = types.GenerateContentConfig()
         if system_instruction:
