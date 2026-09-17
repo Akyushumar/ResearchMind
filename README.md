@@ -1,6 +1,3 @@
-Absolutely. Here is a **single consolidated `README.md` snippet** you can paste directly into the repository.
-
-````markdown
 # ResearchMind
 
 > **Regulatory Intelligence Infrastructure for Evidence-Grounded Research, Reasoning, and Decision Support**
@@ -71,7 +68,6 @@ Vector Search
 LLM
  ↓
 Answer
-````
 
 This works reasonably well for document search, but regulatory reasoning introduces additional problems:
 
@@ -1207,5 +1203,3 @@ Phase 2C–2F Regulatory Intelligence
 
 The project deliberately prioritizes **correctness, provenance, reproducibility, and verifiability over premature feature expansion**.
 
-```
-```
